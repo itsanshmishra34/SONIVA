@@ -1,4 +1,5 @@
 name: soniva-deploy
+# Verified npm lockfile and deterministic CI
 
 on:
   push:
