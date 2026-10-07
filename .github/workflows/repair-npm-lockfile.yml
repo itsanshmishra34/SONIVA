@@ -1,0 +1,45 @@
+name: repair-npm-lockfile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-npm-lockfile.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Regenerate package-lock.json from package.json
+        run: |
+          rm -f package-lock.json
+          npm install --package-lock-only --ignore-scripts
+
+      - name: Validate deterministic install
+        run: npm ci --ignore-scripts
+
+      - name: Commit regenerated lockfile
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json is unchanged."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "Regenerate valid npm lockfile"
+          git push origin HEAD:main
