@@ -24,7 +24,12 @@ const adminApp = initializeApp({
   projectId: firebaseConfig.projectId,
 });
 
-const auth = getAuth(adminApp);
+let auth: ReturnType<typeof getAuth> | undefined;
+try {
+  auth = getAuth(adminApp);
+} catch (err: any) {
+  console.warn('[FIREBASE_ADMIN] Auth initialization unavailable:', err.message);
+}
 
 // Configure Firestore connection with native DB instance
 let firestoreEnabled = true;
@@ -43,20 +48,25 @@ try {
 async function verifyFirestoreConnection() {
   if (!firestoreEnabled) return;
   try {
-    const snap = await firestore.collection('users').limit(1).get();
+    await firestore.collection('users').limit(1).get();
     console.log('[FIREBASE_ADMIN] Firestore verified on DB:', firebaseConfig.firestoreDatabaseId || '(default)');
   } catch (err: any) {
     const isPermissionDenied = err.message?.includes('PERMISSION_DENIED') || err.code === 7;
-    if (isPermissionDenied) {
-      console.warn('[FIREBASE_ADMIN] [PERMISSION_NOTICE] Server service account lacks permissions for database:', firebaseConfig.firestoreDatabaseId || '(default)');
-      console.warn('[FIREBASE_ADMIN] Falling back to In-Memory + Client-Side Firestore Sync mode.');
+    const isMissingCredentials =
+      err.message?.includes('Could not load the default credentials') ||
+      err.message?.includes('Unable to detect a Project Id in the Firebase App');
+    if (isPermissionDenied || isMissingCredentials) {
+      console.warn('[FIREBASE_ADMIN] Firestore unavailable in this runtime. Falling back to In-Memory + Client-Side Firestore Sync mode.');
       firestoreEnabled = false;
     } else {
       console.warn('[FIREBASE_ADMIN] Firestore verification failed:', err.message);
     }
   }
 }
-verifyFirestoreConnection();
+verifyFirestoreConnection().catch((err: any) => {
+  console.warn('[FIREBASE_ADMIN] Firestore verification exception:', err.message);
+  firestoreEnabled = false;
+});
 
 const app = express();
 const httpServer = createServer(app);
