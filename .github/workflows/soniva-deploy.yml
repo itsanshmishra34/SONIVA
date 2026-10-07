@@ -1,0 +1,28 @@
+name: soniva-deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ci-and-deploy:
+    name: soniva-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Deterministic Dependency Installation
+        run: npm ci || npm install --prefer-offline
+
+      - name: Execute Full CI, Self-Healing, and Candidate Deployment
+        run: npx tsx scripts/ci-runner.ts
+        env:
+          PORT: 3000
+          NODE_ENV: production

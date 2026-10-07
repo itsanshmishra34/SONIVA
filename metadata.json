@@ -1,0 +1,11 @@
+{
+  "name": "SONIVA",
+  "description": "Listen. Chat. Connect. Sing. Meet through music, not profiles.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

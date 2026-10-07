@@ -1,0 +1,42 @@
+name: soniva-ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+jobs:
+  validate:
+    name: soniva-ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Deterministic Dependency Installation
+        run: npm ci || npm install --prefer-offline
+
+      - name: Validate Environment & Secrets
+        run: npx tsx scripts/env-validator.ts
+
+      - name: TypeScript Typecheck
+        run: npm run typecheck
+
+      - name: Code Quality & Lint
+        run: npm run lint
+
+      - name: SONIVA Regression Test Suite
+        run: npm test
+
+      - name: Production Build
+        run: npm run build
+
+      - name: Automated Security & Secrets Audit
+        run: npm run security:check

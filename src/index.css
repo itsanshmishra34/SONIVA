@@ -1,0 +1,460 @@
+@import "tailwindcss";
+
+@property --aurora-speed {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+@property --aurora-opacity-factor {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+@property --aurora-scale-factor {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+/* ========================================================
+   SONIVA CENTRALIZED MOTION & DESIGN SYSTEM TOKENS
+   ======================================================== */
+:root {
+  --mouse-x: -1000px;
+  --mouse-y: -1000px;
+
+  /* Durations */
+  --duration-micro: 140ms;
+  --duration-normal: 240ms;
+  --duration-large: 400ms;
+  --duration-ambient: 18s;
+
+  /* Easing curves */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-subtle: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+  background-color: #04050a;
+  color: #f1f5f9;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient cursor-following glow (subtle, non-distracting) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 380px at var(--mouse-x) var(--mouse-y),
+    rgba(6, 182, 212, 0.035),
+    transparent 80%
+  );
+  z-index: -1;
+}
+
+/* ========================================================
+   GLOBAL ANIMATIONS & TRANSITIONS
+   ======================================================== */
+@layer utilities {
+  /* Route Page Entrance (Subtle fade + slight lift) */
+  @keyframes routeFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-page-enter {
+    animation: routeFadeIn 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Modal Scale & Fade entrance */
+  @keyframes modalEnter {
+    0% {
+      opacity: 0;
+      transform: scale(0.96) translateY(4px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-modal-enter {
+    animation: modalEnter 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Dropdown Menu Entrance */
+  @keyframes dropdownEnter {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(-4px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-dropdown-enter {
+    animation: dropdownEnter 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    transform-origin: top right;
+  }
+
+  /* Message Inbound / Outbound */
+  @keyframes msgEnter {
+    0% {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-msg-enter {
+    animation: msgEnter 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Emoji Reaction Pop */
+  @keyframes reactionPop {
+    0% {
+      transform: scale(0.65);
+    }
+    60% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .animate-reaction-pop {
+    animation: reactionPop 220ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Equalizer Bars for Music Visualizer */
+  @keyframes eqBar1 {
+    0%, 100% { height: 25%; }
+    50% { height: 95%; }
+  }
+  @keyframes eqBar2 {
+    0%, 100% { height: 75%; }
+    50% { height: 35%; }
+  }
+  @keyframes eqBar3 {
+    0%, 100% { height: 40%; }
+    50% { height: 100%; }
+  }
+  @keyframes eqBar4 {
+    0%, 100% { height: 85%; }
+    50% { height: 20%; }
+  }
+
+  .animate-eq-1 { animation: eqBar1 0.75s ease-in-out infinite; }
+  .animate-eq-2 { animation: eqBar2 0.62s ease-in-out infinite; }
+  .animate-eq-3 { animation: eqBar3 0.85s ease-in-out infinite; }
+  .animate-eq-4 { animation: eqBar4 0.58s ease-in-out infinite; }
+
+  /* Random Connect Radar & Pulse */
+  @keyframes radarRing {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes radarWave {
+    0% {
+      transform: scale(0.85);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1.7);
+      opacity: 0;
+    }
+  }
+
+  .animate-radar-ring {
+    animation: radarRing 8s linear infinite;
+  }
+
+  .animate-radar-wave {
+    animation: radarWave 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  }
+
+  /* Shimmer for Glass Skeleton Loaders */
+  @keyframes glassShimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-glass-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 0%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: glassShimmer 2s ease-in-out infinite;
+  }
+
+  /* Subtle validation error shake */
+  @keyframes subtleShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+  }
+
+  .animate-subtle-shake {
+    animation: subtleShake 300ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  /* Floating Rising Ambient Reactions */
+  @keyframes floatRise {
+    0% {
+      opacity: 0;
+      transform: translateY(0px) scale(0.85) rotate(0deg);
+    }
+    15% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 0.9;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-140px) scale(1.1) rotate(10deg);
+    }
+  }
+
+  .animate-float-rise {
+    animation: floatRise 2.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+
+  /* Smooth Aurora Drifting Keyframes (18-28s slow organic cycles) */
+  @keyframes auroraOrb1 {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(60px, -45px) scale(1.08); }
+    66% { transform: translate(-40px, 35px) scale(0.95); }
+  }
+
+  @keyframes auroraOrb2 {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(-50px, 45px) scale(1.12); }
+    66% { transform: translate(45px, -30px) scale(0.96); }
+  }
+
+  @keyframes auroraOrb3 {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    50% { transform: translate(65px, 30px) scale(1.1); }
+  }
+
+  .animate-aurora-1 {
+    animation: auroraOrb1 calc(12s / var(--aurora-speed, 1)) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    opacity: calc(0.75 * var(--aurora-opacity-factor, 1));
+    transform: scale(calc(1.1 * var(--aurora-scale-factor, 1)));
+  }
+  .animate-aurora-2 {
+    animation: auroraOrb2 calc(15s / var(--aurora-speed, 1)) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    opacity: calc(0.65 * var(--aurora-opacity-factor, 1));
+    transform: scale(calc(1.05 * var(--aurora-scale-factor, 1)));
+  }
+  .animate-aurora-3 {
+    animation: auroraOrb3 calc(18s / var(--aurora-speed, 1)) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    opacity: calc(0.6 * var(--aurora-opacity-factor, 1));
+    transform: scale(var(--aurora-scale-factor, 1));
+  }
+  .aurora-bg-artwork {
+    background-image: url('/src/assets/images/soniva_aurora_ambient_1791251734888.jpg');
+    opacity: calc(0.35 * var(--aurora-opacity-factor, 1));
+  }
+}
+
+/* ========================================================
+   UNIFIED INTERACTIVE MICRO-INTERACTIONS
+   ======================================================== */
+@layer utilities {
+  .premium-interactive {
+    transition: all var(--duration-normal) var(--ease-spring);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .premium-interactive:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.25);
+    filter: brightness(1.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  .premium-interactive:active {
+    transform: translateY(1px) scale(0.97);
+  }
+
+  /* Unified Play Button Interaction Language */
+  .soniva-play-btn {
+    transition: transform var(--duration-micro) var(--ease-spring),
+                box-shadow var(--duration-normal) var(--ease-spring),
+                filter var(--duration-micro) var(--ease-spring);
+  }
+  .soniva-play-btn:hover {
+    transform: scale(1.03);
+    filter: brightness(1.1);
+  }
+  .soniva-play-btn:active {
+    transform: scale(0.96);
+  }
+
+  /* Tactile Song Card */
+  .soniva-song-card {
+    transition: transform 240ms var(--ease-spring),
+                border-color 240ms var(--ease-spring),
+                background-color 240ms var(--ease-spring),
+                box-shadow 240ms var(--ease-spring);
+  }
+  .soniva-song-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(6, 182, 212, 0.12);
+  }
+}
+
+/* ========================================================
+   LIQUID GLASS DESIGN SYSTEM (DEPTH LEVELS 1 - 5)
+   ======================================================== */
+
+.glass-depth-1 {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%), rgba(10, 9, 22, 0.45);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 4px 20px -1px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.glass-depth-2 {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(12, 11, 26, 0.52);
+  backdrop-filter: blur(28px) saturate(155%);
+  -webkit-backdrop-filter: blur(28px) saturate(155%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 8px 30px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glass-depth-3 {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.025) 100%), rgba(14, 12, 30, 0.58);
+  backdrop-filter: blur(32px) saturate(160%);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 12px 36px -2px rgba(0, 0, 0, 0.55),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-depth-4 {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(15, 12, 32, 0.68);
+  backdrop-filter: blur(36px) saturate(165%);
+  -webkit-backdrop-filter: blur(36px) saturate(165%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 
+    0 20px 50px -6px rgba(0, 0, 0, 0.75),
+    0 0 30px 0 rgba(6, 182, 212, 0.10),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.glass-depth-5 {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(16, 13, 34, 0.75);
+  backdrop-filter: blur(40px) saturate(175%);
+  -webkit-backdrop-filter: blur(40px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: 
+    0 28px 70px -10px rgba(0, 0, 0, 0.85),
+    0 0 45px 0 rgba(168, 85, 247, 0.16),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.40),
+    inset 0 -2px 4px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Specular Refraction Sheen Overlay */
+.liquid-refraction {
+  position: relative;
+}
+.liquid-refraction::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 35%,
+    rgba(6, 182, 212, 0.03) 60%,
+    rgba(168, 85, 247, 0.04) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Minimal Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* ========================================================
+   REDUCED MOTION SUPPORT
+   ======================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-aurora-1,
+  .animate-aurora-2,
+  .animate-aurora-3,
+  .animate-radar-ring,
+  .animate-radar-wave,
+  .animate-float-rise,
+  .animate-glass-shimmer {
+    animation: none !important;
+  }
+}

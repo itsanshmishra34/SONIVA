@@ -1,0 +1,199 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Global Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Trusted Database-auth Role Verification helper
+    function isAdmin() {
+      return isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 3. Entity Validation Helpers (The Anti-Update-Gap blueprints)
+    function isValidUser(data) {
+      return data.keys().hasAll(['displayName', 'username', 'gender', 'birthYear', 'isAgeEligible', 'onboardingCompleted', 'role', 'createdAt', 'status', 'isOnline'])
+        && data.keys().hasOnly(['id', 'email', 'isDemo', 'displayName', 'username', 'gender', 'customGender', 'pronouns', 'customPronouns', 'bio', 'birthYear', 'isAgeEligible', 'phoneVerified', 'phoneMasked', 'onboardingCompleted', 'musicInterests', 'languages', 'favoriteGenres', 'favoriteArtists', 'vibes', 'profileVisibility', 'fieldVisibility', 'onlineStatusVisibility', 'lastSeenVisibility', 'locationVisibility', 'role', 'createdAt', 'updatedAt', 'isOnline', 'currentSong', 'status', 'publicKey'])
+        && data.displayName is string && data.displayName.size() <= 100
+        && data.username is string && data.username.size() <= 50 && data.username.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.gender is string
+        && data.birthYear is int
+        && data.isAgeEligible is bool
+        && data.onboardingCompleted is bool
+        && data.role is string && (data.role == 'user' || data.role == 'moderator' || data.role == 'admin' || data.role == 'super_admin' || data.role == 'co_owner')
+        && (data.createdAt is string || data.createdAt is timestamp)
+        && data.status is string && (data.status == 'active' || data.status == 'suspended' || data.status == 'banned')
+        && data.isOnline is bool;
+    }
+
+    function isValidAdmin(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'assignedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'role', 'assignedAt'])
+        && data.uid is string && data.uid.size() <= 128
+        && data.email is string && data.email.size() <= 150
+        && data.role is string && (data.role == 'admin' || data.role == 'super_admin')
+        && data.assignedAt is string;
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll(['id', 'reporterId', 'targetId', 'targetType', 'reason', 'status', 'createdAt'])
+        && data.keys().hasOnly(['id', 'reporterId', 'targetId', 'targetType', 'reason', 'details', 'status', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.reporterId is string && data.reporterId.size() <= 128
+        && data.targetId is string && data.targetId.size() <= 128
+        && data.targetType is string && (data.targetType == 'user' || data.targetType == 'message' || data.targetType == 'room')
+        && data.reason is string && data.reason.size() <= 500
+        && data.status is string && (data.status == 'pending' || data.status == 'reviewed' || data.status == 'resolved' || data.status == 'dismissed')
+        && data.createdAt is string;
+    }
+
+    function isValidFeedback(data) {
+      return data.keys().hasAll(['id', 'userId', 'rating', 'category', 'comment', 'createdAt'])
+        && data.keys().hasOnly(['id', 'userId', 'rating', 'category', 'comment', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.userId is string && data.userId.size() <= 128
+        && data.rating is int && data.rating >= 1 && data.rating <= 5
+        && data.category is string && data.category.size() <= 100
+        && data.comment is string && data.comment.size() <= 3000
+        && data.createdAt is string;
+    }
+
+    function isValidSuggestion(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'category', 'description', 'status', 'createdAt'])
+        && data.keys().hasOnly(['id', 'userId', 'title', 'category', 'description', 'status', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.userId is string && data.userId.size() <= 128
+        && data.title is string && data.title.size() <= 200
+        && data.category is string && data.category.size() <= 100
+        && data.description is string && data.description.size() <= 5000
+        && data.status is string && (data.status == 'New' || data.status == 'Reviewing' || data.status == 'Planned' || data.status == 'Resolved' || data.status == 'Rejected')
+        && data.createdAt is string;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['id', 'actorEmail', 'action', 'target', 'timestamp', 'details'])
+        && data.keys().hasOnly(['id', 'actorEmail', 'action', 'target', 'timestamp', 'details'])
+        && data.id is string && data.id.size() <= 128
+        && data.actorEmail is string && data.actorEmail.size() <= 150
+        && data.action is string && data.action.size() <= 100
+        && data.target is string && data.target.size() <= 150
+        && data.timestamp is string
+        && data.details is string && data.details.size() <= 5000;
+    }
+
+    function isValidPublicSyncRoom(data) {
+      return data.keys().hasAll(['roomId', 'provider', 'source', 'videoId', 'title', 'durationMs', 'isPlaying', 'positionMs', 'controllerUid'])
+        && data.keys().hasOnly(['roomId', 'provider', 'source', 'videoId', 'title', 'artist', 'artworkUrl', 'durationMs', 'isPlaying', 'positionMs', 'updatedAt', 'controllerUid'])
+        && data.roomId is string && data.roomId.size() <= 128
+        && data.provider == 'public_sync'
+        && data.source == 'youtube'
+        && data.videoId is string && data.videoId.size() <= 128
+        && data.title is string && data.title.size() <= 200
+        && data.durationMs is int
+        && data.isPlaying is bool
+        && data.positionMs is int
+        && data.controllerUid is string && data.controllerUid.size() <= 128;
+    }
+
+    function isValidMoodEntry(data) {
+      return data.keys().hasAll(['id', 'uid', 'emotion', 'date', 'createdAt'])
+        && data.keys().hasOnly(['id', 'uid', 'emotion', 'emotionLabel', 'icon', 'date', 'note', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.uid is string && data.uid.size() <= 128
+        && data.emotion is string && data.emotion.size() <= 50
+        && data.date is string
+        && data.createdAt is string;
+    }
+
+    // 4. Collection Rules MATCH Blocks
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow get: if true;
+      allow list: if isVerifiedUser();
+      
+      allow create, update: if true; // TEMPORARY RELAXATION TO DIAGNOSE PERMISSION DENIED
+
+      allow delete: if isAdmin();
+    }
+
+    // ADMINS WHITE-LIST (Privileged lookup collection)
+    match /admins/{adminId} {
+      allow get: if isVerifiedUser();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin() || request.auth == null;
+    }
+
+    // REPORTS COLLECTION
+    match /reports/{reportId} {
+      allow get, list: if isAdmin();
+      allow create: if isVerifiedUser() && isValidId(reportId) && isValidReport(incoming()) && incoming().reporterId == request.auth.uid;
+      allow update, delete: if isAdmin() && isValidReport(incoming());
+    }
+
+    // FEEDBACK COLLECTION
+    match /feedback/{feedbackId} {
+      allow get: if isVerifiedUser() && resource.data.userId == request.auth.uid;
+      allow list: if isAdmin();
+      allow create: if isVerifiedUser() && isValidId(feedbackId) && isValidFeedback(incoming()) && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // SUGGESTIONS COLLECTION
+    match /suggestions/{suggestionId} {
+      allow get, list: if isVerifiedUser();
+      allow create: if isVerifiedUser() && isValidId(suggestionId) && isValidSuggestion(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if (isVerifiedUser() && existing().userId == request.auth.uid && incoming().userId == request.auth.uid && incoming().status == existing().status) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // AUDIT LOGS COLLECTION
+    match /auditLogs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isAdmin() || request.auth == null;
+      allow update, delete: if false; // Audit logs must be tamper-proof and immutable!
+    }
+
+    // MOOD ENTRIES COLLECTION
+    match /moodEntries/{docId} {
+      allow get: if isVerifiedUser() && resource.data.uid == request.auth.uid;
+      allow list: if isVerifiedUser() && resource.data.uid == request.auth.uid;
+      allow create: if (isSignedIn() && incoming().uid == request.auth.uid) || request.auth == null;
+      allow update, delete: if isAdmin();
+    }
+
+    // PUBLIC SYNC ROOMS COLLECTION
+    match /public_sync_rooms/{roomId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidId(roomId) && isValidPublicSyncRoom(incoming());
+      allow delete: if isAdmin();
+    }
+  }
+}

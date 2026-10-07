@@ -1,0 +1,175 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "The custom profile metadata for authenticated SONIVA users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 150 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "username": { "type": "string", "maxLength": 50, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "gender": { "type": "string" },
+        "birthYear": { "type": "integer" },
+        "isAgeEligible": { "type": "boolean" },
+        "phoneVerified": { "type": "boolean" },
+        "phoneMasked": { "type": "string", "maxLength": 20 },
+        "onboardingCompleted": { "type": "boolean" },
+        "isDemo": { "type": "boolean" },
+        "musicInterests": { "type": "array" },
+        "vibes": { "type": "array" },
+        "favoriteGenres": { "type": "array" },
+        "favoriteArtists": { "type": "array" },
+        "languages": { "type": "array" },
+        "role": { "type": "string", "enum": ["user", "moderator", "admin", "super_admin", "co_owner"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "isOnline": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["active", "suspended", "banned"] },
+        "publicKey": { "type": "string", "maxLength": 256 },
+        "currentSong": { "type": "object" }
+      },
+      "required": ["displayName", "username", "gender", "birthYear", "isAgeEligible", "onboardingCompleted", "role", "createdAt", "status", "isOnline"]
+    },
+    "MoodEntry": {
+      "title": "Mood Entry",
+      "description": "Daily mood tracking entry recorded by users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "uid": { "type": "string", "maxLength": 128 },
+        "emotion": { "type": "string", "maxLength": 50 },
+        "emotionLabel": { "type": "string", "maxLength": 100 },
+        "icon": { "type": "string", "maxLength": 10 },
+        "date": { "type": "string", "format": "date" },
+        "note": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "uid", "emotion", "date", "createdAt"]
+    },
+    "Admin": {
+      "title": "Administrator",
+      "description": "System index used by security rules to verify administrative privileges.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["admin", "super_admin"] },
+        "assignedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "assignedAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "User flags or moderation reports submitted against other users or messages.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "reporterId": { "type": "string", "maxLength": 128 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "targetType": { "type": "string", "enum": ["user", "message", "room"] },
+        "reason": { "type": "string", "maxLength": 500 },
+        "details": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "resolved", "dismissed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "reporterId", "targetId", "targetType", "reason", "status", "createdAt"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "Rating and commentary feedback submitted by app users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "rating": { "type": "integer" },
+        "category": { "type": "string", "maxLength": 100 },
+        "comment": { "type": "string", "maxLength": 3000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "rating", "category", "comment", "createdAt"]
+    },
+    "Suggestion": {
+      "title": "Feature Suggestion",
+      "description": "Features proposed by members for the platform.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "status": { "type": "string", "enum": ["New", "Reviewing", "Planned", "Resolved", "Rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "category", "description", "status", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "Detailed trace log of admin and moderation security-sensitive events.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "actorEmail": { "type": "string", "maxLength": 150 },
+        "action": { "type": "string", "maxLength": 100 },
+        "target": { "type": "string", "maxLength": 150 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "string", "maxLength": 5000 }
+      },
+      "required": ["id", "actorEmail", "action", "target", "timestamp", "details"]
+    },
+    "PublicSyncRoom": {
+      "title": "Public Sync Room State",
+      "description": "The synchronized room playback state for public YouTube video music.",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string", "maxLength": 128 },
+        "provider": { "type": "string", "enum": ["public_sync"] },
+        "source": { "type": "string", "enum": ["youtube"] },
+        "videoId": { "type": "string", "maxLength": 11 },
+        "title": { "type": "string", "maxLength": 200 },
+        "artist": { "type": "string", "maxLength": 200 },
+        "artworkUrl": { "type": "string", "maxLength": 500 },
+        "durationMs": { "type": "integer" },
+        "isPlaying": { "type": "boolean" },
+        "positionMs": { "type": "integer" },
+        "controllerUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["roomId", "provider", "source", "videoId", "title", "durationMs", "isPlaying", "positionMs", "controllerUid"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles indexed by UID."
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Registered administrators, used by rules lookup."
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Abuse flags and moderator reports."
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "Rating feed submissions."
+    },
+    "/suggestions/{suggestionId}": {
+      "schema": "Suggestion",
+      "description": "Proposed feature items."
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Secure trail of administrative operations."
+    },
+    "/moodEntries/{docId}": {
+      "schema": "MoodEntry",
+      "description": "User mood tracking records."
+    },
+    "/public_sync_rooms/{roomId}": {
+      "schema": "PublicSyncRoom",
+      "description": "Synchronized room playback state indexed by roomId."
+    }
+  }
+}
