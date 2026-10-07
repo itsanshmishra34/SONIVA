@@ -24,12 +24,7 @@ const adminApp = initializeApp({
   projectId: firebaseConfig.projectId,
 });
 
-let auth: ReturnType<typeof getAuth> | undefined;
-try {
-  auth = getAuth(adminApp);
-} catch (err: any) {
-  console.warn('[FIREBASE_ADMIN] Auth initialization unavailable:', err.message);
-}
+let auth: ReturnType<typeof getAuth> = getAuth(adminApp);
 
 // Configure Firestore connection with native DB instance
 let firestoreEnabled = true;
