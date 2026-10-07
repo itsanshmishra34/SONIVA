@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/repair-npm-lockfile.yml'
 
 permissions:
@@ -43,5 +45,3 @@ jobs:
           git add package-lock.json
           git commit -m "Regenerate valid npm lockfile"
           git push origin HEAD:main
-
-# Trigger repair workflow once after creation.
