@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync, spawn, ChildProcess } from 'child_process';
 import { SelfHealingEngine, classifyError } from './self-heal';
 import { NormalizedError, StageResult, CIPipelineSummary } from './ci-types';
 import { deployCandidate } from './deploy';
@@ -44,11 +44,58 @@ export async function runCIPipeline(): Promise<CIPipelineSummary> {
     console.log(`\n▶ [CI_STAGE] ${stage.name} (${stage.command})`);
     const start = Date.now();
 
+    let runtimeServer: ChildProcess | undefined;
+
+    const stopRuntimeServer = () => {
+      if (runtimeServer && !runtimeServer.killed) {
+        runtimeServer.kill('SIGTERM');
+      }
+      runtimeServer = undefined;
+    };
+
     try {
-      execSync(stage.command, { stdio: 'inherit' });
+      if (stage.summaryLabel === 'Smoke Test') {
+        const port = process.env.PORT || '3000';
+        console.log(`[RUNTIME] Starting production server for smoke test on port ${port}...`);
+        runtimeServer = spawn('npx', ['tsx', 'server.ts'], {
+          stdio: 'inherit',
+          env: { ...process.env, NODE_ENV: 'production', PORT: port },
+          shell: false
+        });
+
+        const smokeUrl = `http://127.0.0.1:${port}`;
+        const deadline = Date.now() + 15000;
+        let ready = false;
+        while (Date.now() < deadline) {
+          try {
+            const res = await fetch(`${smokeUrl}/api/health`);
+            if (res.ok) {
+              ready = true;
+              break;
+            }
+          } catch {
+            // Server is still starting.
+          }
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
+
+        if (!ready) {
+          stopRuntimeServer();
+          throw new Error(`Production server did not become ready on ${smokeUrl} within 15s`);
+        }
+
+        console.log('[RUNTIME] Production server is ready. Running smoke test...');
+        process.env.TARGET_URL = smokeUrl;
+        execSync(stage.command, { stdio: 'inherit', env: process.env });
+        stopRuntimeServer();
+      } else {
+        execSync(stage.command, { stdio: 'inherit' });
+      }
+
       stageResults[stage.summaryLabel] = 'PASS';
       console.log(`✔ [CI_STAGE_SUCCESS] ${stage.name} passed in ${Date.now() - start}ms`);
     } catch (err: any) {
+      stopRuntimeServer();
       const exitCode = err.status || 1;
       const errorOutput = err.stderr ? err.stderr.toString() : (err.message || String(err));
       console.error(`✖ [CI_STAGE_FAILURE] ${stage.name} failed with exit code ${exitCode}`);
