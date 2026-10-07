@@ -47,21 +47,25 @@ async function verifyFirestoreConnection() {
     console.log('[FIREBASE_ADMIN] Firestore verified on DB:', firebaseConfig.firestoreDatabaseId || '(default)');
   } catch (err: any) {
     const isPermissionDenied = err.message?.includes('PERMISSION_DENIED') || err.code === 7;
-    const isMissingCredentials =
-      err.message?.includes('Could not load the default credentials') ||
-      err.message?.includes('Unable to detect a Project Id in the Firebase App');
-    if (isPermissionDenied || isMissingCredentials) {
-      console.warn('[FIREBASE_ADMIN] Firestore unavailable in this runtime. Falling back to In-Memory + Client-Side Firestore Sync mode.');
+    if (isPermissionDenied) {
+      console.warn('[FIREBASE_ADMIN] Firestore access denied. Falling back to In-Memory + Client-Side Firestore Sync mode.');
       firestoreEnabled = false;
     } else {
       console.warn('[FIREBASE_ADMIN] Firestore verification failed:', err.message);
     }
   }
 }
-verifyFirestoreConnection().catch((err: any) => {
-  console.warn('[FIREBASE_ADMIN] Firestore verification exception:', err.message);
+
+const isGitHubActions = process.env.CI === 'true';
+if (isGitHubActions) {
   firestoreEnabled = false;
-});
+  console.warn('[FIREBASE_ADMIN] GitHub Actions runtime detected. Skipping ADC-dependent Firestore verification; using in-memory mode.');
+} else {
+  verifyFirestoreConnection().catch((err: any) => {
+    console.warn('[FIREBASE_ADMIN] Firestore verification exception:', err.message);
+    firestoreEnabled = false;
+  });
+}
 
 const app = express();
 const httpServer = createServer(app);
