@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
 
       - name: Deterministic Dependency Installation
-        run: npm ci || npm install --prefer-offline
+        run: npm ci
 
       - name: Execute Full CI, Self-Healing, and Candidate Deployment
         run: npx tsx scripts/ci-runner.ts
