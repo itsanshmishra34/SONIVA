@@ -30,9 +30,7 @@ async function testConnection() {
         console.log("[FIREBASE_CONFIG] Connection verified.");
         return;
       }
-      if (error.message && error.message.includes('the client is offline')) {
-        console.error("Please check your Firebase configuration. The client is unable to establish a connection to Firestore.");
-      }
+      console.info("[FIREBASE_CONFIG] Firestore operating in offline/preview mode: Server backend unreachable or offline.");
     }
   }
 }

@@ -16,8 +16,8 @@ export const GlobalYouTubeHost: React.FC = () => {
   return (
     <div
       id="global-youtube-player-host"
-      className="fixed pointer-events-none opacity-0 invisible"
-      style={{ left: '-9999px', top: '-9999px', width: '320px', height: '180px' }}
+      className="fixed pointer-events-none"
+      style={{ position: 'fixed', left: '-9999px', top: '-9999px', width: '320px', height: '180px', zIndex: -100 }}
       aria-hidden="true"
     >
       <div id="global-youtube-player" style={{ width: '100%', height: '100%' }} />

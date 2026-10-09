@@ -3,6 +3,8 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { runSmokeTest } from './smoke-test';
 import { executeRollback } from './rollback';
+import { reportIncident } from './incident-tracker';
+import { sendAlert } from './alert-interface';
 
 export interface DeploymentResult {
   success: boolean;
@@ -32,7 +34,20 @@ export async function deployCandidate(revisionId?: string): Promise<DeploymentRe
   // 1. Verify build artifact exists
   if (!existsSync(distDir) || !existsSync(path.join(distDir, 'index.html'))) {
     console.log('[DEPLOYMENT_ENGINE] Artifact dist/ not found. Executing production build...');
-    execSync('npm run build', { stdio: 'inherit' });
+    try {
+      execSync('npm run build', { stdio: 'inherit' });
+    } catch (err: any) {
+      const incident = await reportIncident({
+        env: 'production',
+        severity: 'CRITICAL',
+        category: 'build',
+        message: `Production build failed: ${err.message}`,
+        subsystem: 'deployment',
+        correlationId: currentRevision
+      });
+      sendAlert(incident);
+      throw err;
+    }
   }
 
   // 2. Candidate Health Check
@@ -72,6 +87,16 @@ export async function deployCandidate(revisionId?: string): Promise<DeploymentRe
     console.error('[DEPLOYMENT_ENGINE] POST-DEPLOYMENT HEALTH CHECK FAILED!');
     console.error('Triggering automatic rollback to last-known-good revision...');
     console.error('==================================================');
+
+    const incident = await reportIncident({
+      env: 'production',
+      severity: 'CRITICAL',
+      category: 'deployment',
+      message: `Post-deployment smoke test failed for ${currentRevision}`,
+      subsystem: 'deployment',
+      correlationId: currentRevision
+    });
+    sendAlert(incident);
 
     const rollbackResult = await executeRollback(`Candidate ${currentRevision} failed post-deployment smoke tests`);
 

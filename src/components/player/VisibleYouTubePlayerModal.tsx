@@ -160,7 +160,6 @@ export const VisibleYouTubePlayerModal: React.FC<VisibleYouTubePlayerModalProps>
 
             <button
               onClick={() => {
-                youtubePlayerManager.destroyPlayer();
                 onClose();
               }}
               className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"

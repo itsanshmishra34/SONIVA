@@ -1,0 +1,15 @@
+[
+  {
+    "env": "test",
+    "severity": "LOW",
+    "category": "test",
+    "message": "Test error message",
+    "subsystem": "test",
+    "correlationId": "test-1",
+    "id": "inc-1791544135315",
+    "firstSeen": "2026-10-09T11:08:55.315Z",
+    "lastSeen": "2026-10-09T11:08:55.315Z",
+    "count": 2,
+    "status": "OPEN"
+  }
+]

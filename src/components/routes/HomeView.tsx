@@ -8,6 +8,7 @@ import { LiquidGlassCard } from '../ui/LiquidGlassCard';
 import { LiquidGlassButton } from '../ui/LiquidGlassButton';
 import { DailyMoodTracker } from '../music/DailyMoodTracker';
 import { MusicVisualizerEqualizer } from '../ui/MusicVisualizerEqualizer';
+import { SonivaUniverse3DCanvas } from '../ui/SonivaUniverse3DCanvas';
 import { 
   MessageSquare, 
   Compass, 
@@ -95,6 +96,23 @@ export const HomeView: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10 pb-28 md:pb-32 space-y-8 max-w-6xl mx-auto w-full">
+      {/* Cinematic 3D Universe Centerpiece */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black tracking-widest text-cyan-400 uppercase bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+              SONIVA 3D EXPERIENCE
+            </span>
+            <span className="text-xs text-slate-400 font-medium hidden sm:inline">Meet through music, not profiles.</span>
+          </div>
+          <span className="text-xs text-purple-400 font-bold flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            Interactive Audio Visualizer
+          </span>
+        </div>
+        <SonivaUniverse3DCanvas />
+      </div>
+
       {/* Hero Welcome Banner */}
       <LiquidGlassCard depth={3} glow={true} className="p-8 md:p-10 relative overflow-hidden">
         <div className="max-w-2xl space-y-4">

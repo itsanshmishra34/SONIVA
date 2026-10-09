@@ -167,6 +167,23 @@ class AudioManager {
 
     this.audio.addEventListener('error', () => {
       const err = this.audio?.error;
+      const track = this.currentTrack;
+      const currentSrc = this.audio?.src || '';
+      
+      // Automatic seamless recovery if an external or proxy stream fails
+      if (track && !currentSrc.includes('/api/audio/fallback/')) {
+        console.warn('[AUDIO_SOURCE_RECOVERY] Stream error encountered. Switching to guaranteed fallback stream for track:', track.id);
+        const fallbackSrc = `/api/audio/fallback/${encodeURIComponent(track.id || 'track-1')}?t=${Date.now()}`;
+        if (this.audio) {
+          this.audio.src = fallbackSrc;
+          this.audio.load();
+          this.audio.play().catch((playErr) => {
+            console.warn('[AUDIO_FALLBACK_PLAY_FAILED]', playErr);
+          });
+          return;
+        }
+      }
+
       console.error('[AUDIO_SOURCE_FAILURE]', {
         trackId: this.currentTrack?.id,
         streamUrl: redactStreamUrl(this.audio?.src || this.currentTrack?.streamUrl),
@@ -325,6 +342,34 @@ class AudioManager {
         console.log('[AUDIO_PLAY_ABORTED] Play request was interrupted by a new request or pause.');
       } else {
         console.error('[AUDIO_PLAY_ERROR] Playback failed:', err.name, err.message);
+        
+        // Try fallback recovery synchronously
+        const track = this.currentTrack;
+        const currentSrc = this.audio?.src || '';
+        if (track && !currentSrc.includes('/api/audio/fallback/')) {
+          console.warn('[AUDIO_PLAY_ERROR_RECOVERY] Attempting recovery from play error for track:', track.id);
+          const fallbackSrc = `/api/audio/fallback/${encodeURIComponent(track.id || 'track-1')}?t=${Date.now()}`;
+          if (this.audio) {
+            this.audio.src = fallbackSrc;
+            this.audio.load();
+            try {
+              const playPromise = this.audio.play();
+              if (playPromise !== undefined) {
+                await playPromise;
+              }
+              if (requestId !== this.currentRequestId || this.state === 'PAUSED' || this.state === 'STOPPING' || this.state === 'IDLE') {
+                this.audio.pause();
+                return;
+              }
+              this.transitionState('PLAYING', 'fallback_resolved');
+              console.log('[AUDIO_PLAY_SUCCESS] Fallback playback started successfully');
+              return;
+            } catch (fallbackPlayErr: any) {
+              console.warn('[AUDIO_FALLBACK_PLAY_FAILED]', fallbackPlayErr);
+            }
+          }
+        }
+
         this.transitionState('ERROR', 'play_error');
         this.emit('error', err);
       }
@@ -375,6 +420,34 @@ class AudioManager {
         console.log('[AUDIO_PLAY_ABORTED] Play request was interrupted by a new request or pause.');
       } else {
         console.error('[AUDIO_PLAY_ERROR] Playback failed:', err.name, err.message);
+        
+        // Try fallback recovery synchronously
+        const track = this.currentTrack;
+        const currentSrc = this.audio?.src || '';
+        if (track && !currentSrc.includes('/api/audio/fallback/')) {
+          console.warn('[AUDIO_PLAY_ERROR_RECOVERY] Attempting recovery from play error for track:', track.id);
+          const fallbackSrc = `/api/audio/fallback/${encodeURIComponent(track.id || 'track-1')}?t=${Date.now()}`;
+          if (this.audio) {
+            this.audio.src = fallbackSrc;
+            this.audio.load();
+            try {
+              const playPromise = this.audio.play();
+              if (playPromise !== undefined) {
+                await playPromise;
+              }
+              if (requestId !== this.currentRequestId || this.state === 'PAUSED' || this.state === 'STOPPING' || this.state === 'IDLE') {
+                this.audio.pause();
+                return;
+              }
+              this.transitionState('PLAYING', 'fallback_resolved');
+              console.log('[AUDIO_PLAY_SUCCESS] Fallback playback started successfully');
+              return;
+            } catch (fallbackPlayErr: any) {
+              console.warn('[AUDIO_FALLBACK_PLAY_FAILED]', fallbackPlayErr);
+            }
+          }
+        }
+
         this.transitionState('ERROR', 'play_error');
         this.emit('error', err);
       }

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: soniva-config
+  namespace: soniva
+  labels:
+    app.kubernetes.io/name: soniva
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  FIREBASE_PROJECT_ID: "civil-experience-12sm5"
+  FIRESTORE_DATABASE_ID: "ai-studio-soniva-6a7f2593-e8ec-4be8-84e2-12cf01c9d665"

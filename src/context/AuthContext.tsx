@@ -43,10 +43,10 @@ interface AuthContextType {
   clearAuthError: () => void;
   googleLogin: () => Promise<{ redirectUrl: string } | null>;
   adminLogin: (accessCode: string) => Promise<{ redirectUrl: string } | null>;
-  completeOnboarding: (data: Partial<User> & { phone?: string }) => Promise<void>;
+  completeOnboarding: (data: Partial<User> & { phone?: string; broadcastSong?: boolean; onlinePresence?: boolean }) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
-  refreshSession: () => Promise<void>;
+  refreshSession: () => Promise<User | null>;
   handleAuthenticatedFirebaseUser: (firebaseUser: FirebaseUser) => Promise<{ redirectUrl: string; user: User } | null>;
 }
 
@@ -177,13 +177,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Sync session check
-  const checkSession = async () => {
+  const checkSession = async (): Promise<User | null> => {
     setIsLoading(true);
     try {
       const firebaseUser = clientAuth.currentUser;
       if (!firebaseUser) {
         setUser(null);
-        return;
+        return null;
       }
       const idToken = await firebaseUser.getIdToken();
       const res = await fetch('/api/auth/me', {
@@ -196,14 +196,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await e2eeService.init();
         socketService.connect(data.user.id, idToken);
         setAuthStatus('authenticated');
+        return data.user;
       } else {
         setUser(null);
         setAuthStatus('idle');
+        return null;
       }
     } catch (e) {
       console.warn('Session check failed:', e);
       setUser(null);
       setAuthStatus('idle');
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -401,8 +404,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Complete First-Time Onboarding
-  const completeOnboarding = async (data: Partial<User> & { phone?: string }) => {
-    if (!user) return;
+  const completeOnboarding = async (data: Partial<User> & { phone?: string; broadcastSong?: boolean; onlinePresence?: boolean }) => {
+    console.log('[AuthContext] [completeOnboarding] Starting...');
+    if (!user) {
+      console.error('[AuthContext] [completeOnboarding] No user found!');
+      return;
+    }
+    
+    console.log('[AuthContext] [completeOnboarding] Current User:', { 
+        id: user.id, 
+        onboardingCompleted: user.onboardingCompleted 
+    });
+
     setIsLoading(true);
     try {
       // 1. Client-side Firestore persistence
@@ -410,7 +423,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { doc, updateDoc } = await import('firebase/firestore');
         const { db } = await import('../services/firebase');
         const userDocRef = doc(db, 'users', user.id);
-        const { phone, ...onboardingData } = data;
+        const { phone, broadcastSong, onlinePresence, ...onboardingData } = data;
+        
+        console.log('[AuthContext] [completeOnboarding] Updating Firestore...', onboardingData);
         await updateDoc(userDocRef, { ...onboardingData, onboardingCompleted: true });
         console.log('[AuthContext] Client-side onboarding sync successful');
       } catch (fsErr) {
@@ -418,6 +433,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 2. Server-side update
+      console.log('[AuthContext] [completeOnboarding] Calling backend...');
       const res = await fetch('/api/auth/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -428,8 +444,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gender: data.gender,
           birthYear: data.birthYear,
           musicInterests: data.musicInterests,
-          phone: data.phone,
           vibes: data.vibes,
+          broadcastSong: data.broadcastSong,
+          onlinePresence: data.onlinePresence,
+          phone: data.phone,
           favoriteGenres: data.favoriteGenres,
           languages: data.languages,
           favoriteArtists: data.favoriteArtists
@@ -438,13 +456,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (res.ok) {
         const result = await res.json();
+        console.log('[AuthContext] [completeOnboarding] Backend response success:', result.user);
         setUser(result.user);
       } else {
         const err = await res.json();
+        console.error('[AuthContext] [completeOnboarding] Backend response error:', err);
         throw new Error(err.error || 'Failed to complete onboarding');
       }
     } finally {
       setIsLoading(false);
+      console.log('[AuthContext] [completeOnboarding] Finished.');
     }
   };
 

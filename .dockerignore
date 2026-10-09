@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.env
+.env.*
+firebase-applet-config.json
+data/incidents.json
+tests
+scripts
+.github
+Dockerfile
+docker-compose.yml
+*.md

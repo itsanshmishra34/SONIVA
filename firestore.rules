@@ -181,6 +181,13 @@ service cloud.firestore {
       allow update, delete: if false; // Audit logs must be tamper-proof and immutable!
     }
 
+    // INCIDENTS COLLECTION
+    match /incidents/{incidentId} {
+      allow get, list: if isAdmin();
+      allow create, update: if isAdmin() || request.auth == null;
+      allow delete: if isAdmin();
+    }
+
     // MOOD ENTRIES COLLECTION
     match /moodEntries/{docId} {
       allow get: if isVerifiedUser() && resource.data.uid == request.auth.uid;

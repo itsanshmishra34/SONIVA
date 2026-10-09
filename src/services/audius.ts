@@ -95,7 +95,7 @@ export class MusicService {
     } catch (err: any) {
       console.warn('[AUDIUS_STREAM_FAILED]', trackId, err.message || err);
       // Fallback to high quality working direct audio stream to prevent format errors
-      const fallbackUrl = 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3';
+      const fallbackUrl = `/api/audius/stream/${encodeURIComponent(trackId)}`;
       this.resolvedUrlCache.set(trackId, fallbackUrl);
       return fallbackUrl;
     }
@@ -128,7 +128,7 @@ export class MusicService {
         title: 'Midnight Echoes',
         artist: 'Aura Bloom',
         artwork: '/src/assets/images/soniva_vinyl_cover_1791251745358.jpg',
-        streamUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3',
+        streamUrl: '/api/audius/stream/track-1',
         duration: 147,
         genre: 'Lo-Fi',
         isStreamable: true
@@ -138,7 +138,7 @@ export class MusicService {
         title: 'Velvet Rain & Neon',
         artist: 'Nectarine Dream',
         artwork: '/src/assets/images/soniva_vinyl_cover_1791251745358.jpg',
-        streamUrl: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=ambient-piano-amp-strings-10711.mp3',
+        streamUrl: '/api/audius/stream/track-2',
         duration: 182,
         genre: 'Ambient',
         isStreamable: true
@@ -148,7 +148,7 @@ export class MusicService {
         title: 'Luminescence In The Dark',
         artist: 'Komorebi Sound',
         artwork: '/src/assets/images/soniva_vinyl_cover_1791251745358.jpg',
-        streamUrl: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=chill-abstract-intention-12099.mp3',
+        streamUrl: '/api/audius/stream/track-3',
         duration: 165,
         genre: 'Electronic',
         isStreamable: true
@@ -158,7 +158,7 @@ export class MusicService {
         title: 'Cosmic Driftway',
         artist: 'Starlight Collective',
         artwork: '/src/assets/images/soniva_vinyl_cover_1791251745358.jpg',
-        streamUrl: 'https://cdn.pixabay.com/download/audio/2023/07/04/audio_332fceb791.mp3?filename=synthwave-80s-156323.mp3',
+        streamUrl: '/api/audius/stream/track-4',
         duration: 210,
         genre: 'Synthwave',
         isStreamable: true
@@ -168,7 +168,7 @@ export class MusicService {
         title: 'Coffee Steam On Glass',
         artist: 'Quiet Hours',
         artwork: '/src/assets/images/soniva_vinyl_cover_1791251745358.jpg',
-        streamUrl: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3?filename=good-night-160166.mp3',
+        streamUrl: '/api/audius/stream/track-5',
         duration: 135,
         genre: 'Lo-Fi',
         isStreamable: true
@@ -178,7 +178,7 @@ export class MusicService {
         title: 'Aurora Horizon',
         artist: 'Solstice Echo',
         artwork: '/src/assets/images/soniva_vinyl_cover_1791251745358.jpg',
-        streamUrl: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=relaxed-vlog-131746.mp3',
+        streamUrl: '/api/audius/stream/track-6',
         duration: 194,
         genre: 'Indie',
         isStreamable: true

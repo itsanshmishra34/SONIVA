@@ -341,6 +341,14 @@ body::before {
    LIQUID GLASS DESIGN SYSTEM (DEPTH LEVELS 1 - 5)
    ======================================================== */
 
+.glass-depth-transition {
+  transition: background 240ms cubic-bezier(0.4, 0, 0.2, 1),
+              backdrop-filter 240ms cubic-bezier(0.4, 0, 0.2, 1),
+              -webkit-backdrop-filter 240ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 240ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .glass-depth-1 {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%), rgba(10, 9, 22, 0.45);
   backdrop-filter: blur(24px) saturate(145%);

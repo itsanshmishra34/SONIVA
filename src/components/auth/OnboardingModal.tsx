@@ -149,15 +149,36 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
     setStep(3);
   };
 
+  React.useEffect(() => {
+    console.log("[ONBOARDING_DEBUG] MODAL_MOUNT");
+    return () => {
+      console.log("[ONBOARDING_DEBUG] MODAL_UNMOUNT");
+    };
+  }, []);
+
   const handleFinishOnboarding = async () => {
+    console.log("[ONBOARDING_DEBUG] ENTER_SONIVA_CLICK", {
+      step,
+      isAuthenticated: !!user,
+      userExists: !!user,
+      uid: user?.id ?? null,
+      onboardingComplete: user?.onboardingCompleted
+    });
+    console.log("[ONBOARDING_DEBUG] VALIDATION_START");
+
     if (selectedInterests.length === 0) {
+      console.log("[ONBOARDING_DEBUG] VALIDATION_RESULT", "Fail: No interests");
       setErrorMsg('Please select at least one music interest.');
       return;
     }
     if (selectedVibes.length === 0) {
+      console.log("[ONBOARDING_DEBUG] VALIDATION_RESULT", "Fail: No vibes");
       setErrorMsg('Please select at least one listening vibe.');
       return;
     }
+    console.log("[ONBOARDING_DEBUG] VALIDATION_RESULT", "Success");
+    
+    console.log("[ONBOARDING_DEBUG] SAVE_START");
     setIsSubmitting(true);
     try {
       await completeOnboarding({
@@ -167,15 +188,23 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComp
         birthYear,
         musicInterests: selectedInterests,
         vibes: selectedVibes,
+        broadcastSong,
+        onlinePresence,
         phone: isPhoneVerified ? phone : undefined
       });
+      console.log("[ONBOARDING_DEBUG] SAVE_SUCCESS");
+      
+      console.log("[ONBOARDING_DEBUG] MODAL_CLOSE_START");
       onComplete();
+      console.log("[ONBOARDING_DEBUG] MODAL_CLOSE_COMPLETE");
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to save onboarding.');
+      console.log("[ONBOARDING_DEBUG] SAVE_FAILURE", err);
+      setErrorMsg(err.message || 'Unable to complete your profile. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xl">

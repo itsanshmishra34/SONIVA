@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MusicProvider, useMusic } from './context/MusicContext';
@@ -445,8 +445,22 @@ function MainLayout() {
 function AppContent() {
   const { user, isAuthenticated, isLoading, refreshSession } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isNavigatingToMain, setIsNavigatingToMain] = useState(false);
 
-  if (isLoading) {
+  // Diagnostic logging for render state
+  useEffect(() => {
+    console.log("[APP_CONTENT_DEBUG] RENDER_STATE", {
+      pathname: location.pathname,
+      isAuthenticated,
+      userExists: !!user,
+      onboardingCompleted: user?.onboardingCompleted,
+      isNavigatingToMain,
+      loading: isLoading
+    });
+  }, [location.pathname, isAuthenticated, user, isNavigatingToMain, isLoading]);
+
+  if (isLoading && !isNavigatingToMain) {
     return <AuthLoadingScreen />;
   }
 
@@ -472,11 +486,26 @@ function AppContent() {
   }
 
   // Authenticated user requiring onboarding
-  if (user && !user.onboardingCompleted) {
+  if (user && !user.onboardingCompleted && !isNavigatingToMain) {
     return (
       <div className="flex h-dvh min-h-0 w-screen overflow-hidden bg-slate-950 text-slate-100 relative">
         <MusicReactiveAurora />
-        <OnboardingModal isOpen={true} onComplete={refreshSession} />
+        <OnboardingModal 
+          isOpen={true} 
+          onComplete={async () => {
+            console.log("[ONBOARDING_DEBUG] NAVIGATION_START", "Navigating to main app");
+            setIsNavigatingToMain(true);
+            try {
+              await refreshSession();
+              const redirectRoute = (user?.role === 'admin' || user?.role === 'super_admin') ? '/admin' : '/';
+              console.log("[ONBOARDING_DEBUG] NAVIGATION_COMPLETE", redirectRoute);
+              navigate(redirectRoute);
+            } catch (e) {
+              console.error("[ONBOARDING_DEBUG] NAVIGATION_FAILED", e);
+              setIsNavigatingToMain(false);
+            }
+          }}
+        />
       </div>
     );
   }
